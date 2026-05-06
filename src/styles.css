@@ -120,6 +120,7 @@ body {
 }
 
 .status-listening::before,
+.status-transcribing::before,
 .status-thinking::before {
   animation: status-pulse 1.5s ease-in-out infinite;
 }

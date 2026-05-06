@@ -9,5 +9,8 @@
     "width": 420,
     "height": 260,
     "margin": 24
+  },
+  "audio": {
+    "recordingSeconds": 10
   }
 }

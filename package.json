@@ -25,7 +25,9 @@
     "files": [
       "src/**/*",
       "package.json",
-      "overlay.config.example.json"
+      "overlay.config.example.json",
+      "README.md",
+      ".env.example"
     ],
     "directories": {
       "output": "release"

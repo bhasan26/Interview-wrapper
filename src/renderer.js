@@ -4,20 +4,13 @@ const statusIndicator = document.querySelector('#status-indicator');
 const questionText = document.querySelector('#question-text');
 const answerContent = document.querySelector('#answer-content');
 
-const sampleAnswer = `Use this panel for short, glanceable answers.
+const sampleAnswer = `Press \`Ctrl+Shift+Space\` to record 10 seconds of system audio and transcribe the interviewer question.
 
-- Keep responses concise.
-- Use \`code\` formatting for technical terms.
-- Longer answers scroll here without moving the question area.
-
-\`\`\`js
-function example() {
-  return 'Markdown rendering is ready';
-}
-\`\`\``;
+If system audio is unavailable, type the question manually in the Question field.`;
 
 let panelOffset = { x: 0, y: 0 };
 let dragStart;
+let recording = false;
 
 function renderState(state) {
   if (!state) {
@@ -25,7 +18,7 @@ function renderState(state) {
   }
 
   setPanelVisible(state.aiPanelVisible);
-  setStatus(state.status || (state.aiPanelVisible ? 'Ready' : 'Ready'));
+  setStatus(state.status || 'Ready');
 
   if (state.question && questionText.value !== state.question) {
     questionText.value = state.question;
@@ -54,12 +47,14 @@ function setPanelVisible(visible) {
 }
 
 function setStatus(status) {
-  const normalized = ['Listening…', 'Thinking…', 'Ready'].includes(status) ? status : 'Ready';
+  const normalized = ['Listening…', 'Transcribing…', 'Thinking…', 'Ready'].includes(status) ? status : 'Ready';
   statusIndicator.textContent = normalized;
   statusIndicator.className = 'status-indicator';
 
   if (normalized === 'Listening…') {
     statusIndicator.classList.add('status-listening');
+  } else if (normalized === 'Transcribing…') {
+    statusIndicator.classList.add('status-transcribing');
   } else if (normalized === 'Thinking…') {
     statusIndicator.classList.add('status-thinking');
   } else {
@@ -153,6 +148,106 @@ function inlineMarkdown(text) {
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
+async function startSystemAudioCapture(details = {}) {
+  if (recording) {
+    return;
+  }
+
+  recording = true;
+  setPanelVisible(true);
+  setStatus('Listening…');
+
+  try {
+    const source = await window.interviewOverlay.getSystemAudioSource();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: source.id
+        }
+      },
+      video: {
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: source.id,
+          maxWidth: 1,
+          maxHeight: 1,
+          maxFrameRate: 1
+        }
+      }
+    });
+
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      stopTracks(stream);
+      throw new Error(getPlatformAudioHelp(details.platform));
+    }
+
+    const audioOnlyStream = new MediaStream(audioTracks);
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : 'audio/webm';
+    const recorder = new MediaRecorder(audioOnlyStream, { mimeType });
+    const chunks = [];
+
+    recorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    });
+
+    recorder.addEventListener('stop', async () => {
+      stopTracks(stream);
+      setStatus('Transcribing…');
+
+      try {
+        const blob = new Blob(chunks, { type: mimeType });
+        const audioBuffer = await blob.arrayBuffer();
+        const result = await window.interviewOverlay.transcribeAudio({
+          audioBuffer,
+          mimeType
+        });
+
+        if (result?.text && questionText.value !== result.text) {
+          questionText.value = result.text;
+        }
+      } catch (error) {
+        window.interviewOverlay.reportAudioCaptureFailure(error.message);
+      } finally {
+        recording = false;
+      }
+    });
+
+    recorder.start();
+    window.setTimeout(() => {
+      if (recorder.state !== 'inactive') {
+        recorder.stop();
+      }
+    }, (details.recordingSeconds || 10) * 1000);
+  } catch (error) {
+    recording = false;
+    window.interviewOverlay.reportAudioCaptureFailure(error.message);
+  }
+}
+
+function stopTracks(stream) {
+  for (const track of stream.getTracks()) {
+    track.stop();
+  }
+}
+
+function getPlatformAudioHelp(platform) {
+  if (platform === 'darwin') {
+    return 'No system audio track found. Install BlackHole and route the interviewer audio through it, or use a ScreenCaptureKit-capable capture path.';
+  }
+
+  if (platform === 'win32') {
+    return 'No system audio track found. Enable a playback device that supports WASAPI loopback.';
+  }
+
+  return 'No system audio track found from desktop capture.';
+}
+
 function escapeHtml(value) {
   return value
     .replace(/&/g, '&amp;')
@@ -217,16 +312,14 @@ function constrainPanelOffset(nextOffset) {
   };
 }
 
+questionText.addEventListener('input', () => window.interviewOverlay.updateQuestion(questionText.value));
+
 dragHandle.addEventListener('pointerdown', startDrag);
 dragHandle.addEventListener('pointermove', updateDrag);
 dragHandle.addEventListener('pointerup', stopDrag);
 dragHandle.addEventListener('pointercancel', stopDrag);
 responsePanel.addEventListener('mouseenter', () => window.interviewOverlay.setPanelInteractive(true));
-responsePanel.addEventListener('mouseleave', () => {
-  if (!dragStart) {
-    window.interviewOverlay.setPanelInteractive(false);
-  }
-});
 
 window.interviewOverlay.getState().then(renderState);
 window.interviewOverlay.onStateChange(renderState);
+window.interviewOverlay.onAudioCaptureStart(startSystemAudioCapture);
