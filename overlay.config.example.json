@@ -1,0 +1,21 @@
+{
+  "shortcuts": {
+    "toggleOverlay": "CommandOrControl+Shift+H",
+    "triggerAiPanel": "CommandOrControl+Shift+Space",
+    "captureScreenshot": "CommandOrControl+Shift+S"
+  },
+  "window": {
+    "placement": "fullscreen",
+    "corner": "top-right",
+    "width": 420,
+    "height": 260,
+    "margin": 24
+  },
+  "audio": {
+    "recordingSeconds": 10
+  },
+  "ai": {
+    "model": "claude-sonnet-4-20250514",
+    "maxTokens": 1200
+  }
+}
