@@ -20,6 +20,7 @@ let overlayWindow;
 let overlayVisible = true;
 let aiPanelVisible = false;
 let appConfig = DEFAULT_CONFIG;
+let overlayInteractive = false;
 
 function readJsonFile(filePath) {
   try {
@@ -132,7 +133,7 @@ function createOverlayWindow() {
 
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  setOverlayInteractivity(false);
   overlayWindow.setContentProtection(true);
 
   overlayWindow.loadFile(path.join(__dirname, 'index.html'));
@@ -175,7 +176,18 @@ function toggleAiPanel() {
     overlayWindow.showInactive();
   }
 
+  setOverlayInteractivity(aiPanelVisible);
   notifyState();
+}
+
+function setOverlayInteractivity(interactive) {
+  overlayInteractive = interactive;
+
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    return;
+  }
+
+  overlayWindow.setIgnoreMouseEvents(!interactive, { forward: true });
 }
 
 function notifyState() {
@@ -186,6 +198,9 @@ function notifyState() {
   overlayWindow.webContents.send('overlay:state', {
     overlayVisible,
     aiPanelVisible,
+    status: aiPanelVisible ? 'Ready' : 'Ready',
+    question: '',
+    answer: '',
     shortcuts: appConfig.shortcuts,
     window: appConfig.window
   });
@@ -209,9 +224,20 @@ function registerShortcuts() {
 ipcMain.handle('overlay:get-state', () => ({
   overlayVisible,
   aiPanelVisible,
+  status: aiPanelVisible ? 'Ready' : 'Ready',
+  question: '',
+  answer: '',
   shortcuts: appConfig.shortcuts,
   window: appConfig.window
 }));
+
+ipcMain.on('overlay:set-panel-interactive', (_event, interactive) => {
+  if (!aiPanelVisible && interactive) {
+    return;
+  }
+
+  setOverlayInteractivity(interactive);
+});
 
 app.whenReady().then(() => {
   loadConfig();

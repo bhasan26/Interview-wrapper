@@ -8,27 +8,31 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="overlay-shell" aria-live="polite">
-      <section class="status-card">
-        <p class="eyebrow">Interview Overlay</p>
-        <h1>Ready</h1>
-        <p id="placement">Protected transparent overlay is running.</p>
-        <dl>
-          <div>
-            <dt>Toggle</dt>
-            <dd id="toggle-shortcut">Ctrl+Shift+H</dd>
-          </div>
-          <div>
-            <dt>AI panel</dt>
-            <dd id="ai-shortcut">Ctrl+Shift+Space</dd>
-          </div>
-        </dl>
-      </section>
+    <main class="overlay-root" aria-live="polite">
+      <section id="response-panel" class="response-panel" aria-label="Interview response panel" hidden>
+        <header id="drag-handle" class="drag-handle" title="Drag to reposition panel">
+          <span class="grip" aria-hidden="true"></span>
+          <span class="panel-title">Interview Overlay</span>
+          <span id="status-indicator" class="status-indicator status-ready">Ready</span>
+        </header>
 
-      <section id="ai-panel" class="ai-panel" hidden>
-        <p class="eyebrow">AI Response Panel</p>
-        <h2>Prompt captured</h2>
-        <p>Add speech-to-text, clipboard, or API integration here when you are ready.</p>
+        <section class="question-section" aria-labelledby="question-heading">
+          <div class="section-heading">
+            <h1 id="question-heading">Question</h1>
+            <span class="hint">captured or typed</span>
+          </div>
+          <textarea id="question-text" class="question-text" spellcheck="false" placeholder="Type or capture a question…"></textarea>
+        </section>
+
+        <section class="answer-section" aria-labelledby="answer-heading">
+          <div class="section-heading">
+            <h2 id="answer-heading">Answer</h2>
+            <span class="hint">markdown preview</span>
+          </div>
+          <div id="answer-content" class="answer-content markdown-body">
+            <p>Trigger the panel to show AI responses here.</p>
+          </div>
+        </section>
       </section>
     </main>
 

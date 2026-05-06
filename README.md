@@ -11,6 +11,8 @@ A minimal Electron 29+ desktop overlay shell with a transparent, frameless, alwa
   - `Ctrl+Shift+H` / `Cmd+Shift+H`: toggle overlay visibility.
   - `Ctrl+Shift+Space` / `Cmd+Shift+Space`: toggle the AI response panel.
 - Safe preload API exposed with `contextBridge` while renderer Node integration remains disabled.
+- Hidden dark-mode response panel with Question and markdown-rendered Answer areas.
+- Draggable panel handle for repositioning the UI while the answer area scrolls independently.
 - `electron-builder` packaging configuration for macOS, Windows, and Linux.
 
 > Capture protection depends on the operating system and capture application honoring the native protected-window APIs. Test the packaged app with every conferencing or recording tool you plan to use.
