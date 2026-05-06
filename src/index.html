@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;" />
+    <title>Interview Overlay</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="overlay-shell" aria-live="polite">
+      <section class="status-card">
+        <p class="eyebrow">Interview Overlay</p>
+        <h1>Ready</h1>
+        <p id="placement">Protected transparent overlay is running.</p>
+        <dl>
+          <div>
+            <dt>Toggle</dt>
+            <dd id="toggle-shortcut">Ctrl+Shift+H</dd>
+          </div>
+          <div>
+            <dt>AI panel</dt>
+            <dd id="ai-shortcut">Ctrl+Shift+Space</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section id="ai-panel" class="ai-panel" hidden>
+        <p class="eyebrow">AI Response Panel</p>
+        <h2>Prompt captured</h2>
+        <p>Add speech-to-text, clipboard, or API integration here when you are ready.</p>
+      </section>
+    </main>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>

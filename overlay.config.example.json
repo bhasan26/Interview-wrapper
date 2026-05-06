@@ -1,0 +1,13 @@
+{
+  "shortcuts": {
+    "toggleOverlay": "CommandOrControl+Shift+H",
+    "triggerAiPanel": "CommandOrControl+Shift+Space"
+  },
+  "window": {
+    "placement": "fullscreen",
+    "corner": "top-right",
+    "width": 420,
+    "height": 260,
+    "margin": 24
+  }
+}
